@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <title>Diamond || Create Account</title>
+    <title>awshotels || Create Account</title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -74,7 +74,7 @@
                                 </nav>
                             </div>
                         </div>
-                    
+
                         <!-- Mobile Menu -->
                         <div class="col-12">
                             <div class="mobile_menu d-block d-lg-none"></div>
@@ -90,31 +90,48 @@
     <section class="login">
         <div class="container mt-5 mb-5">
             <% if(err.length) { %>
-            <%  for(i=0 ;i<err.length;i++){%>
-            <h3 style="color: #ff304f;" class="text-center"><%=err[i]%></h3><br>
-            <%   }%>
-            <%   } %>
-            <div class="row">
+                <% for(i=0 ;i<err.length;i++){%>
+                    <h3 style="color: #ff304f;" class="text-center">
+                        <%=err[i]%>
+                    </h3><br>
+                    <% }%>
+                        <% } %>
+                            <div class="row">
 
-                <div class="col-lg-4 col-md-6 col-sm-12 text-center position">
-                    <form action="/createaccount" method="POST">
-                        <label>User Name</label>
-                        <input type="text" name="name" class="form-control" placeholder="User Name" required>
-                        <label>Email Address</label>
-                        <input type="text" name="mail" class="form-control" placeholder="Email Address" required>
-                        <label>Phone number</label>
-                        <input type="text" name="phone" class="form-control" placeholder="Phone number" required>
-                        <label>Password</label>
-                        <input type="password" name="pass" class="form-control" placeholder="password" required>
-                        <label>Re-enter Password</label>
-                        <input type="password" name="con_pass" class="form-control" placeholder="password" required>
+                                <div class="col-lg-4 col-md-6 col-sm-12 text-center position">
+                                    <form action="/createaccount" method="POST">
+                                        <label>User Name</label>
+                                        <input type="text" name="name" class="form-control" placeholder="User Name"
+                                            required>
+                                        <label>Email Address</label>
+                                        <input type="text" name="mail" class="form-control" placeholder="Email Address"
+                                            required>
+                                        <label>Phone number</label>
+                                        <input type="text" name="phone" class="form-control" placeholder="Phone number"
+                                            required>
+                                        <label>Gender</label>
+                                        <input type="text" name="gender" class="form-control" placeholder="Gender"
+                                            required>
+                                        <label>Address</label>
+                                        <input type="text" name="address" class="form-control" placeholder="Address"
+                                            required>
+                                        <label>Date of Birth</label>
+                                        <input type="text" name="dob" class="form-control" placeholder="MM/DD/YYYY"
+                                            required>
+                                        <label>Password</label>
+                                        <input type="password" name="pass" class="form-control" placeholder="password"
+                                            required>
+                                        <label>Re-enter Password</label>
+                                        <input type="password" name="con_pass" class="form-control"
+                                            placeholder="password" required>
 
-                        <input type="submit" value="Create Account" class="btn btn-info btn-lg mt-3">
-                    </form>
-                </div>
+                                        <input type="submit" value="Create Account" id="cognito-connect"
+                                            class="btn btn-info btn-lg mt-3">
+                                    </form>
+                                </div>
 
 
-            </div>
+                            </div>
         </div>
     </section>
     <!-- ================ contact section end ================= -->
@@ -161,10 +178,7 @@
     <script>
         $('#datepicker').datepicker({
             iconsLibrary: 'fontawesome',
-            disableDaysOfWeek: [0, 0],
-            //     icons: {
-            //      rightIcon: '<span class="fa fa-caret-down"></span>'
-            //  }
+            disableDaysOfWeek: [0, 0]
         });
         $('#datepicker2').datepicker({
             iconsLibrary: 'fontawesome',
