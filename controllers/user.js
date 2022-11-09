@@ -11,14 +11,7 @@ const poolData = {
 const pool_region = 'us-east-1';
 const pool = new AmazonCognitoIdentity.CognitoUserPool(poolData)
 
-let awsConfig = {
-   "region": 'us-east-1',
-   "endpoint": "http://dynamodb.us-east-1.amazonaws.com",
-   "accessKeyId": process.env.aws_access_key_id,
-   "secretAcceesKey": process.env.aws_secret_access_key
-};
-AWS.config.update(awsConfig)
-var dynodb = new AWS.DynamoDB({ apiVersion: '2012-08-10' });
+var dynodb = new AWS.DynamoDB({ apiVersion: '2012-08-10', "region": 'us-east-1', "endpoint": "http://dynamodb.us-east-1.amazonaws.com" });
 
 //authentication check
 exports.authentication = (req, res, next) => {
@@ -133,27 +126,11 @@ exports.postCreateAccount = (req, res, next) => {
                console.log("Error", err);
             } else {
                console.log("Success", data);
-               verifyEmail(mail)
                res.render('user/loginAccount', { user: "", msg: ["Account Create Successfuly"], err: [] });
             }
          });
       }
    })
-}
-
-function verifyEmail(mail) {
-   var ses = new AWS.SES({ "accessKeyId": process.env.aws_access_key_id, "secretAccessKey": process.env.aws_secret_access_key, "region": "us-east-1" })
-   var params = {
-      EmailAddress: mail
-   };
-   ses.verifyEmailIdentity(params, function (err, data) {
-      if (err) {
-         console.log("Ses err", err)
-      }
-      else {
-         console.log("ses data", data)
-      }
-   });
 }
 
 //logout
