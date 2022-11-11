@@ -1,16 +1,51 @@
 var mysql = require('mysql2');
+var fs = require('fs');
 var formidable = require('formidable');
 const path = require('path');
 var AWS = require('aws-sdk');
 
 var connectDB = mysql.createConnection({
-    host: "localhost",
-    user: "root",
-    password: "",
-    database: "hotel"
+    host: process.env.rds_host,
+    user: process.env.rds_user,
+    password: process.env.rds_password,
+    database: process.env.rds_database
 });
 
-var dynamodb = new AWS.DynamoDB({ "region": 'us-east-1', apiVersion: '2012-08-10', "endpoint": "http://dynamodb.us-east-1.amazonaws.com", });
+var s3 = new AWS.S3({
+    accessKeyId: process.env.accessKeyId,
+    secretAccessKey: process.env.secretAccessKey,
+    region: process.env.region,
+    apiVersion: '2006-03-01'
+    // bucket : "aishbucket1"
+});
+
+var bucket = "aishbucket1";
+
+
+
+var roleToAssume = {
+    RoleArn: 'arn:aws:iam::939216532729:role/Aishwarya-dyanamodb',
+    RoleSessionName: 'session1',
+    DurationSeconds: 900,
+};
+var roleCreds;
+
+// Create the STS service object    
+var sts = new AWS.STS({ apiVersion: '2011-06-15' });
+
+//Assume Role
+var dynamodb = {}
+sts.assumeRole(roleToAssume, function (err, data) {
+    if (err) console.log(err, err.stack);
+    else {
+        var creds = new AWS.Credentials({
+            accessKeyId: data.Credentials.AccessKeyId,
+            secretAccessKey: data.Credentials.SecretAccessKey,
+            sessionToken: data.Credentials.SessionToken
+        })
+        dynamodb = new AWS.DynamoDB({ apiVersion: '2012-08-10', credentials: creds, region: 'us-east-1' })
+    }
+})
 
 // login get request
 exports.getLogin = (req, res, next) => {
@@ -60,9 +95,6 @@ exports.postLogin = (req, res, next) => {
                             var userData = {}
                             result1[i].date = a.toString().slice(0, 15);
                             //getting user details from dynamodb
-                            if (result1[i].email == "amy@email.com"){
-                                result1[i].email = "fefoji8726@hempyl.com"
-                            }
                             var params = {
                                 Key: {
                                     "email": {
@@ -123,12 +155,32 @@ exports.postChnageStatus = (req, res, next) => {
     connectDB.query(data, (err, result) => {
         if (err) throw err;
         else {
-            connectDB.query(data1, (err1, result1) => {
+            connectDB.query(data1, async (err1, result1) => {
                 if (err1) throw err1;
                 else {
                     for (i in result1) {
                         var a = result1[i].date;
+                        var userData = {}
                         result1[i].date = a.toString().slice(0, 15);
+                        //getting user details from dynamodb
+                        var params = {
+                            Key: {
+                                "email": {
+                                    S: result1[i].email
+                                }
+                            },
+                            TableName: "USERS"
+                        };
+                        try {
+                            await dynamodb.getItem(params, function (err, data) {
+                                if (!err) {
+                                    userData = data
+                                    result1[i].userDetails = userData
+                                }
+                            }).promise()
+                        } catch (err) {
+                            console.log(err);
+                        }
                     }
                     return res.render('admin/index', { msg: "", err: "", data: result1 });
                 }
@@ -148,12 +200,13 @@ exports.getAddHotel = (req, res, next) => {
 exports.postAddHotel = (req, res, next) => {
 
     //var
-    var cat = "", type = "", cost = 0, avlvl = 0, des = ""
+    var cat = "", type = "", cost = 0, avlvl = 0, decs = ""
     var imgPath = ""
     var wrong = 0;
 
-    new formidable.IncomingForm().parse(req)
-        .on('field', (name, field) => {
+    var form = new formidable.IncomingForm();
+    form.parse(req).on
+        ('field', (name, field) => {
             if (name === "cat") {
                 cat = field;
             }
@@ -166,64 +219,63 @@ exports.postAddHotel = (req, res, next) => {
             else if (name === "avlvl") {
                 avlvl = parseInt(field);
             }
-            else if (name === "des") {
-                des = field
+            else if (name === "decs") {
+                decs = field
             }
 
         })
-        .on('file', (name, file) => {
-            // console.log('Uploaded file', name)
-            //   fs.rename(file.path,__dirname+"a")
-        })
-        .on('fileBegin', function (name, file) {
-            //console.log(mail);
 
-            var fileType = file.type.split('/').pop();
-            if (fileType == 'jpg' || fileType == 'png' || fileType == 'jpeg') {
+        .on('file', function (name, part1) {
+            const fileContent = fs.readFileSync(part1.path);
+            // console.log("part",part1);
+            // console.log("fileContent",fileContent);
 
-                a = path.join(__dirname, '../')
-                ///  console.log(__dirname)
-                //  console.log(a)
-                if (name === "img") {
-                    imgPath = (cat + type + cost + "." + fileType);
+
+
+            const params = {
+                Bucket: bucket,
+                Key: part1.name, // File name you want to save as in S3
+                Body: fileContent
+            };
+
+            // Uploading files to the bucket
+            s3.upload(params, function (err, data) {
+
+                // console.log(data);
+                imgPath = data.Location;
+                if (err) {
+                    throw err;
                 }
-                imgPath = '/assets/img/rooms/' + (cat + type + cost + "." + fileType)
-                file.path = a + '/public/assets/img/rooms/' + (cat + type + cost + "." + fileType); // __dirname
-            } else {
-                console.log("Wrong File type")
-                wrong = 1;
-                res.render('admin/addhotel', { msg: "", err: "Wrong File type" });
-            }
+                else {
+                    data1 = "INSERT INTO `category`(`name`, `type`, `cost`, `available`, `img`, `decs`) " +
+                        "VALUES('" + cat + "','" + type + "', '" + cost + "','" + avlvl + "' ,'" + imgPath + "' ,'" + decs + "' )"
+                    connectDB.query(data1, (err, result) => {
+
+                        if (err) {
+                            throw err;
+                        }
+                        else {
+                            res.render('admin/addhotel', { msg: "Data Insert Successfuly", err: "" });
+                        }
+                    });
+                }
+                // console.log('File uploaded successfullydata ', data);
+                // console.log('File uploaded successfully.',data.Location);
+                // console.log(`File uploaded successfully. ${data.Location}`);
+            });
+
         })
+
+
         .on('aborted', () => {
             console.error('Request aborted by the user')
         })
         .on('error', (err) => {
-            console.error('Error', err)
+            console.error("Error from on", err);
             throw err
         })
-        .on('end', () => {
 
-            if (wrong == 1) {
-                console.log("Error")
-            }
-            else {
 
-                //saveDir = __dirname + '/uploads/';
-
-                data = "INSERT INTO `category`(`name`, `type`, `cost`, `available`, `img`, `dec`) " +
-                    "VALUES('" + cat + "','" + type + "', '" + cost + "','" + avlvl + "' ,'" + imgPath + "' ,'" + des + "' )"
-                connectDB.query(data, (err, result) => {
-
-                    if (err) {
-                        throw err;
-                    }
-                    else {
-                        res.render('admin/addhotel', { msg: "Data Insert Successfuly", err: "" });
-                    }
-                });
-            }
-        })
 }
 
 //get update page
@@ -276,7 +328,7 @@ exports.updatePrevData = (req, res, next) => {
         "SET type = " + mysql.escape(req.body.type) +
         ", cost = " + mysql.escape(parseInt(req.body.cost)) +
         ", available = " + mysql.escape(parseInt(req.body.avlvl)) +
-        ", `dec` = " + mysql.escape(req.body.des) +
+        ", `decs` = " + mysql.escape(req.body.des) +
         " WHERE name = " + mysql.escape(req.session.info.name) +
         " AND type = " + mysql.escape(req.session.info.type) +
         " AND cost = " + mysql.escape(parseInt(req.session.info.cost))
@@ -299,4 +351,3 @@ exports.logout = (req, res, next) => {
     req.session.destroy();
     res.render('admin/login', { msg: "", err: "" });
 }
-
