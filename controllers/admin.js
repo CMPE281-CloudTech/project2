@@ -4,9 +4,9 @@ const path = require('path');
 var AWS = require('aws-sdk');
 
 var connectDB = mysql.createConnection({
-    host: "localhost",
-    user: "root",
-    password: "",
+    host: "database-1.c8oxondilugf.us-west-1.rds.amazonaws.com",
+    user: "admin",
+    password: "adminaishwarya",
     database: "hotel"
 });
 
@@ -60,9 +60,6 @@ exports.postLogin = (req, res, next) => {
                             var userData = {}
                             result1[i].date = a.toString().slice(0, 15);
                             //getting user details from dynamodb
-                            if (result1[i].email == "amy@email.com"){
-                                result1[i].email = "fefoji8726@hempyl.com"
-                            }
                             var params = {
                                 Key: {
                                     "email": {
@@ -123,12 +120,32 @@ exports.postChnageStatus = (req, res, next) => {
     connectDB.query(data, (err, result) => {
         if (err) throw err;
         else {
-            connectDB.query(data1, (err1, result1) => {
+            connectDB.query(data1, async (err1, result1) => {
                 if (err1) throw err1;
                 else {
                     for (i in result1) {
                         var a = result1[i].date;
+                        var userData = {}
                         result1[i].date = a.toString().slice(0, 15);
+                        //getting user details from dynamodb
+                        var params = {
+                            Key: {
+                                "email": {
+                                    S: result1[i].email
+                                }
+                            },
+                            TableName: "USERS"
+                        };
+                        try {
+                            await dynamodb.getItem(params, function (err, data) {
+                                if (!err) {
+                                    userData = data
+                                    result1[i].userDetails = userData
+                                }
+                            }).promise()
+                        } catch (err) {
+                            console.log(err);
+                        }
                     }
                     return res.render('admin/index', { msg: "", err: "", data: result1 });
                 }

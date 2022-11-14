@@ -103,11 +103,11 @@
                           <th>
                             <%=i%>
                           </th>
-                          <th><a data-toggle="modal" href="#" data-target="#exampleModal">
+                          <th><a data-toggle="modal" href="#" data-target="#runModal<%=i%>">
                               <%=data[i].email%>
                             </a></th>
                             <!-- Modal -->
-                            <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog"
+                            <div class="modal fade" id="runModal<%=i%>" tabindex="-1" role="dialog"
                             aria-labelledby="exampleModalLabel" aria-hidden="true">
                             <div class="modal-dialog" role="document">
                               <div class="modal-content">
