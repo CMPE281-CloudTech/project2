@@ -16,7 +16,7 @@ var s3 = new AWS.S3({
     secretAccessKey: process.env.secretAccessKey,
     region: process.env.region,
     apiVersion: '2006-03-01'
-    // bucket : "aishbucket1"
+
 });
 
 var bucket = "aishbucket1";
@@ -204,11 +204,13 @@ exports.postAddHotel = (req, res, next) => {
     var imgPath = ""
     var wrong = 0;
 
+
     var form = new formidable.IncomingForm();
     form.parse(req).on
         ('field', (name, field) => {
             if (name === "cat") {
                 cat = field;
+
             }
             else if (name === "type") {
                 type = field;
@@ -227,10 +229,6 @@ exports.postAddHotel = (req, res, next) => {
 
         .on('file', function (name, part1) {
             const fileContent = fs.readFileSync(part1.path);
-            // console.log("part",part1);
-            // console.log("fileContent",fileContent);
-
-
 
             const params = {
                 Bucket: bucket,
@@ -241,7 +239,6 @@ exports.postAddHotel = (req, res, next) => {
             // Uploading files to the bucket
             s3.upload(params, function (err, data) {
 
-                // console.log(data);
                 imgPath = data.Location;
                 if (err) {
                     throw err;
