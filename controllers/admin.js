@@ -1,16 +1,75 @@
+require('dotenv').config();
 var mysql = require('mysql2');
+var fs = require('fs');
 var formidable = require('formidable');
 const path = require('path');
 var AWS = require('aws-sdk');
+var easyinvoice = require('easyinvoice');
+var fs = require("fs");
+var ses = new AWS.SES({ region: 'us-east-1' });
+var mailcomposer = require('mailcomposer');
+var awsCloudFront = require("aws-cloudfront-sign");
 
 var connectDB = mysql.createConnection({
-    host: "database-1.c8oxondilugf.us-west-1.rds.amazonaws.com",
-    user: "admin",
-    password: "adminaishwarya",
-    database: "hotel"
+    host: process.env.rds_host,
+    user: process.env.rds_user,
+    password: process.env.rds_password,
+    database: process.env.rds_database
 });
 
-var dynamodb = new AWS.DynamoDB({ "region": 'us-east-1', apiVersion: '2012-08-10', "endpoint": "http://dynamodb.us-east-1.amazonaws.com", });
+var s3 = new AWS.S3({
+    accessKeyId: process.env.accessKeyId,
+    secretAccessKey: process.env.secretAccessKey,
+    region: process.env.region,
+    apiVersion: '2006-03-01'
+
+});
+
+var bucket = "aishbucket1";
+
+var roleToAssume = {
+    RoleArn: 'arn:aws:iam::939216532729:role/Aishwarya-dyanamodb',
+    RoleSessionName: 'session1',
+    DurationSeconds: 900,
+};
+
+// Create the STS service object    
+var sts = new AWS.STS({ apiVersion: '2011-06-15' });
+
+//Assume Role
+var dynamodb = {}
+sts.assumeRole(roleToAssume, function (err, data) {
+    if (err) console.log(err, err.stack);
+    else {
+        var creds = new AWS.Credentials({
+            accessKeyId: data.Credentials.AccessKeyId,
+            secretAccessKey: data.Credentials.SecretAccessKey,
+            sessionToken: data.Credentials.SessionToken
+        })
+        dynamodb = new AWS.DynamoDB({ apiVersion: '2012-08-10', credentials: creds, region: 'us-east-1' })
+    }
+})
+
+async function getDetailsFromDynamoDB(email){
+    var params = {
+        Key: {
+            "email": {
+                S: email
+            }
+        },
+        TableName: "USERS"
+    };
+    try {
+        await dynamodb.getItem(params, function (err, data) {
+            if (!err) {
+                userdata = data;
+            }
+        }).promise()
+    } catch (err) {
+        console.log(err);
+    }
+    return userdata
+}
 
 // login get request
 exports.getLogin = (req, res, next) => {
@@ -21,12 +80,13 @@ exports.getLogin = (req, res, next) => {
         data1 = "SELECT * " +
             "FROM  bookingstatus " +
             "WHERE status = 0 ";
-        connectDB.query(data1, (err1, result1) => {
+        connectDB.query(data1, async (err1, result1) => {
             if (err1) throw err1;
             else {
                 for (i in result1) {
                     var a = result1[i].date;
                     result1[i].date = a.toString().slice(0, 15);
+                    result1[i].userDetails = await getDetailsFromDynamoDB(result1[i].email)
                 }
                 return res.render('admin/index', { msg: "", err: "", data: result1 });
             }
@@ -57,27 +117,9 @@ exports.postLogin = (req, res, next) => {
                     else {
                         for (i in result1) {
                             var a = result1[i].date;
-                            var userData = {}
                             result1[i].date = a.toString().slice(0, 15);
                             //getting user details from dynamodb
-                            var params = {
-                                Key: {
-                                    "email": {
-                                        S: result1[i].email
-                                    }
-                                },
-                                TableName: "USERS"
-                            };
-                            try {
-                                await dynamodb.getItem(params, function (err, data) {
-                                    if (!err) {
-                                        userData = data
-                                        result1[i].userDetails = userData
-                                    }
-                                }).promise()
-                            } catch (err) {
-                                console.log(err);
-                            }
+                            result1[i].userDetails = await getDetailsFromDynamoDB(result1[i].email)
                         }
                         return res.render('admin/index', { msg: "", err: "", data: result1 });
                     }
@@ -90,20 +132,130 @@ exports.postLogin = (req, res, next) => {
     })
 }
 
+//get invoices
+exports.getInvoices = (req, res, next) => {
+    var options = { keypairId: process.env.CLOUDFRONT_ACCESS_KEY_ID, privateKeyPath: process.env.CLOUDFRONT_PRIVATE_KEY_PATH };
+    return fetch('https://j0noe3sfu4.execute-api.us-east-1.amazonaws.com/dev/invoice', {
+        method: 'GET',
+    }).then(async response => {
+        let urls = []
+        if (response.status == 200) {
+            let data = JSON.parse(await response.text());
+            for (var i=1; i<data.Contents.length; i++){
+                urls.push({
+                    url : awsCloudFront.getSignedUrl(process.env.CLOUDFRONT_URL + "/" + data.Contents[i].Key, options),
+                    filename : data.Contents[i].Key
+                })
+            }
+            return res.render('admin/invoice', { msg: "", err: "", data: urls })
+        }
+    })
+}
+
 //change booking status
-exports.postChnageStatus = (req, res, next) => {
+exports.postChangeStatus = (req, res, next) => {
     //console.log(req.body);
 
     var value = 0;
 
     if (req.body.click == "Approve") {
         value = 1;
-        data = "UPDATE bookingstatus " +
-            " SET  status = " + mysql.escape(value) +
-            " WHERE email = " + mysql.escape(req.body.mail) +
-            " AND type = " + mysql.escape(req.body.type) +
-            " AND category = " + mysql.escape(req.body.cat) +
-            " AND roomWant = " + mysql.escape(req.body.want)
+        // data = "UPDATE bookingstatus " +
+        //     " SET  status = " + mysql.escape(value) +
+        //     " WHERE email = " + mysql.escape(req.body.mail) +
+        //     " AND type = " + mysql.escape(req.body.type) +
+        //     " AND category = " + mysql.escape(req.body.cat) +
+        //     " AND roomWant = " + mysql.escape(req.body.want)
+
+        //creating invoice pdf
+        let today = new Date()
+        let dueDate = new Date(new Date().setDate(today.getDate()+15))
+        var invoiceData = {
+            "images": {
+                // The logo on top of your invoice
+                "logo": fs.readFileSync('public/assets/img/logo/hotel.png', 'base64')
+            },
+            // Your own data
+            "sender": {
+                "company": "AWS Hotels",
+                "address": "CMPE281 street",
+                "zip": "967784",
+                "city": "San Jose",
+                "country": "USA"
+            },
+            // Your recipient
+            "client": {
+                "company": req.body.name,
+                "address": req.body.address
+            },
+            "information": {
+                // Invoice number
+                "number": (Math.random() * 1000).toFixed(4),
+                // Invoice data
+                "date": new Date().toString().slice(0, 15),
+                "due-date": dueDate.toString().slice(0, 15)
+            },
+            "products": [
+                {
+                    "quantity": req.body.want,
+                    "description": req.body.cat,
+                    "tax-rate": 6,
+                    "price": 250
+                }],
+            "bottom-notice": "Kindly pay your invoice within 15 days.",
+            "settings": {
+                "currency": "USD",
+            },
+        };
+        easyinvoice.createInvoice(invoiceData, function (result) {
+            // The response will contain a base64 encoded PDF file
+            //console.log('PDF base64 string: ', result.pdf);
+            fs.writeFileSync("invoice.pdf", result.pdf, 'base64');
+
+
+            //sending a mail to customer using AWS SES
+            Promise.resolve().then(() => {
+                let sendRawEmailPromise;
+
+                const mail = mailcomposer({
+                    from: 'awshotels@dayrep.com',
+                    replyTo: 'source@example.com',
+                    to: 'srinishaa@hotmail.com',
+                    subject: 'AWS Hotels Booking Confirmation',
+                    text: 'Hello! Thank you for choosing AWS Hotels. PFA invoice.',
+                    attachments: [
+                        {
+                            path: 'invoice.pdf'
+                        },
+                    ],
+                });
+
+                new Promise((resolve, reject) => {
+                    mail.build((err, message) => {
+                        if (err) {
+                            reject(`Error sending raw email: ${err}`);
+                        }
+                        sendRawEmailPromise = ses.sendRawEmail({ RawMessage: { Data: message } }).promise();
+                    });
+
+                    resolve(sendRawEmailPromise);
+                });
+
+                //uploading to reciept to s3
+                var date = new Date().toISOString();
+                let filename = req.body.mail + date + ".pdf"
+                return fetch(`https://j0noe3sfu4.execute-api.us-east-1.amazonaws.com/dev/invoice?filename=${filename}`, { // Your POST endpoint
+                    method: 'POST',
+                    headers: {
+                        "Content-Type": "*/*"
+                    },
+                    body: new Buffer(result.pdf, 'base64')
+                }).then(
+                    response => response.json()
+                )
+            });
+
+        });
 
     } else {
         data = "DELETE FROM bookingstatus " +
@@ -128,24 +280,7 @@ exports.postChnageStatus = (req, res, next) => {
                         var userData = {}
                         result1[i].date = a.toString().slice(0, 15);
                         //getting user details from dynamodb
-                        var params = {
-                            Key: {
-                                "email": {
-                                    S: result1[i].email
-                                }
-                            },
-                            TableName: "USERS"
-                        };
-                        try {
-                            await dynamodb.getItem(params, function (err, data) {
-                                if (!err) {
-                                    userData = data
-                                    result1[i].userDetails = userData
-                                }
-                            }).promise()
-                        } catch (err) {
-                            console.log(err);
-                        }
+                        result1[i].userDetails = await getDetailsFromDynamoDB(result1[i].email)
                     }
                     return res.render('admin/index', { msg: "", err: "", data: result1 });
                 }
@@ -165,14 +300,17 @@ exports.getAddHotel = (req, res, next) => {
 exports.postAddHotel = (req, res, next) => {
 
     //var
-    var cat = "", type = "", cost = 0, avlvl = 0, des = ""
+    var cat = "", type = "", cost = 0, avlvl = 0, decs = ""
     var imgPath = ""
     var wrong = 0;
 
-    new formidable.IncomingForm().parse(req)
-        .on('field', (name, field) => {
+
+    var form = new formidable.IncomingForm();
+    form.parse(req).on
+        ('field', (name, field) => {
             if (name === "cat") {
                 cat = field;
+
             }
             else if (name === "type") {
                 type = field;
@@ -183,64 +321,58 @@ exports.postAddHotel = (req, res, next) => {
             else if (name === "avlvl") {
                 avlvl = parseInt(field);
             }
-            else if (name === "des") {
-                des = field
+            else if (name === "decs") {
+                decs = field
             }
 
         })
-        .on('file', (name, file) => {
-            // console.log('Uploaded file', name)
-            //   fs.rename(file.path,__dirname+"a")
-        })
-        .on('fileBegin', function (name, file) {
-            //console.log(mail);
 
-            var fileType = file.type.split('/').pop();
-            if (fileType == 'jpg' || fileType == 'png' || fileType == 'jpeg') {
+        .on('file', function (name, part1) {
+            const fileContent = fs.readFileSync(part1.path);
 
-                a = path.join(__dirname, '../')
-                ///  console.log(__dirname)
-                //  console.log(a)
-                if (name === "img") {
-                    imgPath = (cat + type + cost + "." + fileType);
+            const params = {
+                Bucket: bucket,
+                Key: part1.name, // File name you want to save as in S3
+                Body: fileContent
+            };
+
+            // Uploading files to the bucket
+            s3.upload(params, function (err, data) {
+
+                imgPath = data.Location;
+                if (err) {
+                    throw err;
                 }
-                imgPath = '/assets/img/rooms/' + (cat + type + cost + "." + fileType)
-                file.path = a + '/public/assets/img/rooms/' + (cat + type + cost + "." + fileType); // __dirname
-            } else {
-                console.log("Wrong File type")
-                wrong = 1;
-                res.render('admin/addhotel', { msg: "", err: "Wrong File type" });
-            }
+                else {
+                    data1 = "INSERT INTO `category`(`name`, `type`, `cost`, `available`, `img`, `decs`) " +
+                        "VALUES('" + cat + "','" + type + "', '" + cost + "','" + avlvl + "' ,'" + imgPath + "' ,'" + decs + "' )"
+                    connectDB.query(data1, (err, result) => {
+
+                        if (err) {
+                            throw err;
+                        }
+                        else {
+                            res.render('admin/addhotel', { msg: "Data Insert Successfuly", err: "" });
+                        }
+                    });
+                }
+                // console.log('File uploaded successfullydata ', data);
+                // console.log('File uploaded successfully.',data.Location);
+                // console.log(`File uploaded successfully. ${data.Location}`);
+            });
+
         })
+
+
         .on('aborted', () => {
             console.error('Request aborted by the user')
         })
         .on('error', (err) => {
-            console.error('Error', err)
+            console.error("Error from on", err);
             throw err
         })
-        .on('end', () => {
 
-            if (wrong == 1) {
-                console.log("Error")
-            }
-            else {
 
-                //saveDir = __dirname + '/uploads/';
-
-                data = "INSERT INTO `category`(`name`, `type`, `cost`, `available`, `img`, `dec`) " +
-                    "VALUES('" + cat + "','" + type + "', '" + cost + "','" + avlvl + "' ,'" + imgPath + "' ,'" + des + "' )"
-                connectDB.query(data, (err, result) => {
-
-                    if (err) {
-                        throw err;
-                    }
-                    else {
-                        res.render('admin/addhotel', { msg: "Data Insert Successfuly", err: "" });
-                    }
-                });
-            }
-        })
 }
 
 //get update page
@@ -293,7 +425,7 @@ exports.updatePrevData = (req, res, next) => {
         "SET type = " + mysql.escape(req.body.type) +
         ", cost = " + mysql.escape(parseInt(req.body.cost)) +
         ", available = " + mysql.escape(parseInt(req.body.avlvl)) +
-        ", `dec` = " + mysql.escape(req.body.des) +
+        ", `decs` = " + mysql.escape(req.body.des) +
         " WHERE name = " + mysql.escape(req.session.info.name) +
         " AND type = " + mysql.escape(req.session.info.type) +
         " AND cost = " + mysql.escape(parseInt(req.session.info.cost))
@@ -316,4 +448,3 @@ exports.logout = (req, res, next) => {
     req.session.destroy();
     res.render('admin/login', { msg: "", err: "" });
 }
-

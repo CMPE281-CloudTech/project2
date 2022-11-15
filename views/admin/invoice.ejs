@@ -1,0 +1,17 @@
+<%-include("header.ejs")%>
+    <div class="content-wrapper">
+        <div class="container-fluid">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <div class="card-body">
+                        <% if(data.length) { %>
+                            <% for (i in data) { %>
+                                <a href="<%=data[i].url%>"><%=data[i].filename%></a><br>
+                            <% } %>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+<%-include("footer.ejs")%>
