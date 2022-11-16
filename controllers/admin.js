@@ -233,7 +233,7 @@ exports.postChangeStatus = (req, res, next) => {
                 const mail = mailcomposer({
                     from: 'awshotels@dayrep.com',
                     replyTo: 'source@example.com',
-                    to: 'srinishaa@hotmail.com',
+                    to: req.body.mail,
                     subject: 'AWS Hotels Booking Confirmation',
                     text: 'Hello! Thank you for choosing AWS Hotels. PFA invoice.',
                     attachments: [
