@@ -213,9 +213,6 @@ exports.postBooking = (req, res, next) => {
 
 exports.postStatus = (req, res, next) => {
 
-
-
-   
   var date = req.body.date;
    //console.log(date)
    data = "INSERT INTO bookingstatus " +
@@ -243,15 +240,6 @@ exports.postStatus = (req, res, next) => {
 
 //get status
 exports.getShowStatus = (req, res, next) => {
-
-
-   var connectDB = mysql.createConnection({
-      host: process.env.rds_host,
-      user: process.env.rds_user,
-      password: process.env.rds_password,
-      database: process.env.rds_database
-   });
-
 
    data = "SELECT * " +
       " FROM  bookingstatus " +

@@ -4,12 +4,12 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <title>Diamond || Show Category</title>
+    <title>Diamond || Contact Us</title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link rel="manifest" href="site.webmanifest">
-    <link rel="shortcut icon" type="image/x-icon" href="assets/img/favicon.ico">
+    <!-- <link rel="manifest" href="site.webmanifest"> -->
+    <link rel="shortcut icon" type="image/x-icon" href="img/favicon.png">
     <!-- Place favicon.ico in the root directory -->
 
     <!-- CSS here -->
@@ -61,21 +61,21 @@
                                 <nav>
                                     <ul id="navigation">
                                         <li><a href="/">Home</a></li>
-                                        <% if(user.length){%>
-                                        <li><a href="/category">Category</a></li>
-                                        <li><a href="/showStatus">Status</a></li>
-                                        <li><a href="/contact">Contact</a></li>
-                                        <li><a href="/logout">Logout</a></li>
-                                        <%  } else { %>
-                                        <li><a href="/login">Login</a></li>
-                                        <li><a href="/createaccount">Create Account</a></li>
-                                        <li><a href="/contact">Contact</a></li>
-                                        <% } %>
+                                        <% if(user.length){ %>
+                                            <li><a href="/category">Category</a></li>
+                                            <li><a href="/showStatus">Status</a></li>
+                                            <li><a href="/contact">Contact</a></li>
+                                            <li><a href="/logout">Logout</a></li>
+                                            <% } else { %>
+                                                <li><a href="/login">Login</a></li>
+                                                <li><a href="/createaccount">Create Account</a></li>
+                                                <li><a href="/contact">Contact</a></li>
+                                                <% } %>
                                     </ul>
                                 </nav>
                             </div>
                         </div>
-                    
+
                         <!-- Mobile Menu -->
                         <div class="col-12">
                             <div class="mobile_menu d-block d-lg-none"></div>
@@ -86,69 +86,51 @@
         </div>
         <!-- Header End -->
     </header>
-    <main>
 
+    <!-- slider Area Start-->
 
-        <!-- Room Start -->
-        <section class="room-area">
-            <div class="container">
-                <div class="row">
-                    <div class="col-lg-12 col-lg-12 col-sm-12 col-12">
-                        <!--font-back-tittle  -->
-                        <!-- <div class="font-back-tittle mb-45"> -->
-                            <div class="archivment-front">
-                                <h3>Rooms Available</h3>
-                            </div>
-                            
-                            <!-- <h3 class="archivment-back">Our Rooms</h3> -->
-                        <!-- </div> -->
-                    </div>
+    <!-- slider Area End-->
 
-                    <% if(rooms.length) { %>
-                    <% for(i=0;i<rooms.length;i++){  %>
-
-
-                    <div class="col-xl-4 col-lg-4 col-md-12 col-12">
-                        <!-- Single Room -->
-                        <form action="/boooking" method="POST">
-                            <input type="text" name="name" value="<%=rooms[i].name%>" hidden>
-                            <input type="text" name="type" value="<%=rooms[i].type%>" hidden>
-                            <input type="text" name="cost" value="<%=rooms[i].cost%>" hidden>
-
-                            <div class="single-room mb-50">
-                                <div class="room-img p-2">        
-                                        <a href="#"><img src="<%=rooms[i].img%>" alt="" height="200px"></a>
-                                </div>
-                                <div class="room-caption text-center">
-
-                                    <h3><a href="#"><%=rooms[i].type%></a></h3>
-                                    <h5><%=rooms[i].dec%></h5>
-                                    <div class="per-night">
-                                        <span><span>$</span> <%=rooms[i].cost%> <span>/ per night</span></span>
-                                    </div>
-                                    <input type="submit" class="btn btn-danger" value="Book Now!!">
-                                </div>
-                            </div>
-
-                    </div>
-                    </form>
-                    <% } %>
-                    <% } else{  %>
-                      <br>
-                <div class="col-lg-12 col-md-12 col-sm-12">
-                      <h2 style="color: #ff304f;" class="text-center mt-5 mb-5">No Room Available Right Now</h2>
+    <!-- ================ contact section start ================= -->
+    <section class="contact-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <h2 class="contact-title">About Us</h2>
                 </div>
-                    <br>
-                    <%  }  %>
-
+                <div class="col-lg-8">
+                    <h3>Name: Cloud Spartans</h3>
+                    <p>Address: AWS Hotels, SanJose, California USA</p>
+                </div>
+                <div class="col-lg-3 offset-lg-1">
+                    <div class="media contact-info">
+                        <span class="contact-info__icon"><i class="ti-home"></i></span>
+                        <div class="media-body">
+                            <h3>AWS Hotels, SanJose, California USA.</h3>
+                            <p>456107</p>
+                        </div>
+                    </div>
+                    <div class="media contact-info">
+                        <span class="contact-info__icon"><i class="ti-tablet"></i></span>
+                        <div class="media-body">
+                            <h3>+1(813-943-1860)</h3>
+                            <p>Mon to Fri 9am to 6pm</p>
+                        </div>
+                    </div>
+                    <div class="media contact-info">
+                        <span class="contact-info__icon"><i class="ti-email"></i></span>
+                        <div class="media-body">
+                            <h3>support@awshotel.com</h3>
+                            <p>Send us your query anytime!</p>
+                        </div>
+                    </div>
                 </div>
             </div>
+        </div>
+    </section>
+    <!-- ================ contact section end ================= -->
 
-        </section>
-        <!-- Room End -->
-    </main>
 
-    
     <!-- JS here -->
 
     <!-- All JS Custom Plugins Link Here here -->
@@ -187,20 +169,40 @@
     <script src="./assets/js/plugins.js"></script>
     <script src="./assets/js/main.js"></script>
 
-    <!--Chat bot-->
-        <script type="text/javascript">
-            (function(d, m){
-                var kommunicateSettings = 
-                    {"appId":"71ba175ab0c95c586cfd0b89dd09d3fa","popupWidget":true,"automaticChatOpenOnNavigation":true};
-                var s = document.createElement("script"); s.type = "text/javascript"; s.async = true;
-                s.src = "https://widget.kommunicate.io/v2/kommunicate.app";
-                var h = document.getElementsByTagName("head")[0]; h.appendChild(s);
-                window.kommunicate = m; m._globals = kommunicateSettings;
-            })(document, window.kommunicate || {});
-        /* NOTE : Use web server to view HTML files as real-time update will not work if you directly open the HTML file in the browser. */
-        </script>
 
+    <script>
+        $('#datepicker').datepicker({
+            iconsLibrary: 'fontawesome',
+            disableDaysOfWeek: [0, 0],
+            //     icons: {
+            //      rightIcon: '<span class="fa fa-caret-down"></span>'
+            //  }
+        });
+        $('#datepicker2').datepicker({
+            iconsLibrary: 'fontawesome',
+            icons: {
+                rightIcon: '<span class="fa fa-caret-down"></span>'
+            }
+
+        });
+        var timepicker = $('#timepicker').timepicker({
+            format: 'HH.MM'
+        });
+    </script>
+    <!-- //chatbot -->
+    <script type="text/javascript">
+        (function (d, m) {
+            var kommunicateSettings =
+                { "appId": "71ba175ab0c95c586cfd0b89dd09d3fa", "popupWidget": true, "automaticChatOpenOnNavigation": true };
+            var s = document.createElement("script"); s.type = "text/javascript"; s.async = true;
+            s.src = "https://widget.kommunicate.io/v2/kommunicate.app";
+            var h = document.getElementsByTagName("head")[0]; h.appendChild(s);
+            window.kommunicate = m; m._globals = kommunicateSettings;
+        })(document, window.kommunicate || {});
+        /* NOTE : Use web server to view HTML files as real-time update will not work if you directly open the HTML file in the browser. */
+    </script>
 
 </body>
+
 
 </html>

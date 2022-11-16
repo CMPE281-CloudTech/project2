@@ -35,11 +35,13 @@
         .errposition h3 {
             margin-top: 100px;
         }
-        .positiontb{
+
+        .positiontb {
             margin-top: 55px;
             margin-bottom: 55px;
         }
-        .buttonDelete{
+
+        .buttonDelete {
             padding: 20px;
         }
     </style>
@@ -79,15 +81,15 @@
                                     <ul id="navigation">
                                         <li><a href="/">Home</a></li>
                                         <% if(user.length){ %>
-                                        <li><a href="/category">Category</a></li>
-                                        <li><a href="/showStatus">Status</a></li>
-                                        <li><a href="/contact">Contact</a></li>
-                                        <li><a href="/logout">Logout</a></li>
-                                        <%  } else { %>
-                                        <li><a href="/login">Login</a></li>
-                                        <li><a href="/createaccount">Create Account</a></li>
-                                        <li><a href="/contact">Contact</a></li>
-                                        <% } %>
+                                            <li><a href="/category">Category</a></li>
+                                            <li><a href="/showStatus">Status</a></li>
+                                            <li><a href="/contact">Contact</a></li>
+                                            <li><a href="/logout">Logout</a></li>
+                                            <% } else { %>
+                                                <li><a href="/login">Login</a></li>
+                                                <li><a href="/createaccount">Create Account</a></li>
+                                                <li><a href="/contact">Contact</a></li>
+                                                <% } %>
                                     </ul>
                                 </nav>
                             </div>
@@ -112,69 +114,83 @@
                 <div class="col-lg-12 positiontb">
                     <% if(msg.length) { %>
 
-                    <h3 style="color: #17b978;" class="text-center"><%=msg%></h3><br>
+                        <h3 style="color: #17b978;" class="text-center">
+                            <%=msg%>
+                        </h3><br>
 
-                    <%   } %>
-                    <% if(err.length) { %>
+                        <% } %>
+                            <% if(err.length) { %>
 
-                    <div class="errposition">
-                        <h3 style="color: #ff304f;" class="text-center"><%=err%></h3>
-                    </div>
+                                <div class="errposition">
+                                    <h3 style="color: #ff304f;" class="text-center">
+                                        <%=err%>
+                                    </h3>
+                                </div>
 
 
-                    <%   } %>
+                                <% } %>
 
-                    <% if(err.length == 0 ){ %>
+                                    <% if(err.length==0 ){ %>
 
-                    <table class="table">
-                        <thead class="thead-dark">
-                            <tr border="1">
-                                <th>Name</th>
-                                <th>Date</th>
-                                <th>Category</th>
-                                <th>Type</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <% for(i in data){  %>
+                                        <table class="table">
+                                            <thead class="thead-dark">
+                                                <tr border="1">
+                                                    <th>Name</th>
+                                                    <th>Date</th>
+                                                    <th>Category</th>
+                                                    <th>Type</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                            </thead>
+                                            <% for(i in data){ %>
 
-                        <tbody>
-                            <tr>
-                                <td><%=data[i].email%></td>
-                                <td><%=data[i].date%></td>
-                                <td><%=data[i].category%> </td>
-                                <td><%=data[i].type%></td>
-                                
-                                <% if(data[i].status == 1){ %>
-                                    <td style="color: #17b978;" class="text-center">Approved</td>
-                                <% }  else if(data[i].status == 0){ %>
-                                    <td style="color: #f0da16;" class="text-center">Pending
-                                    <form action="/deletereq"  method="POST"> 
-                                        <input type="text" name="mail" value="<%=data[i].email%>" hidden>
-                                        <input type="text" name="want" value="<%=data[i].roomWant%>" hidden>
-                                        <input type="text" name="cat" value="<%=data[i].category%>" hidden>
-                                        <input type="text" name="type" value="<%=data[i].type%>" hidden>
-                                        <input type="submit" value="Delete" style="background-color: #ff304f;" class="text-center btn btn-danger buttonDelete">
-                                    </td>
-                                    </form>
-                                <%  } %>
+                                                <tbody>
+                                                    <tr>
+                                                        <td>
+                                                            <%=data[i].email%>
+                                                        </td>
+                                                        <td>
+                                                            <%=data[i].date%>
+                                                        </td>
+                                                        <td>
+                                                            <%=data[i].category%>
+                                                        </td>
+                                                        <td>
+                                                            <%=data[i].type%>
+                                                        </td>
 
-                            </tr>
-                        </tbody>
-                        <%   } %>
-                    </table>
-                    <%   } %>
+                                                        <% if(data[i].status==1){ %>
+                                                            <td style="color: #17b978;" class="text-center">Approved
+                                                            </td>
+                                                            <% } else if(data[i].status==0){ %>
+                                                                <td style="color: #f0da16;" class="text-center">Pending
+                                                                    <form action="/deletereq" method="POST">
+                                                                        <input type="text" name="mail"
+                                                                            value="<%=data[i].email%>" hidden>
+                                                                        <input type="text" name="want"
+                                                                            value="<%=data[i].roomWant%>" hidden>
+                                                                        <input type="text" name="cat"
+                                                                            value="<%=data[i].category%>" hidden>
+                                                                        <input type="text" name="type"
+                                                                            value="<%=data[i].type%>" hidden>
+                                                                        <input type="submit" value="Delete"
+                                                                            style="background-color: #ff304f;"
+                                                                            class="text-center btn btn-danger buttonDelete">
+                                                                </td>
+                                                                </form>
+                                                                <% } %>
+
+                                                    </tr>
+                                                </tbody>
+                                                <% } %>
+                                        </table>
+                                        <% } %>
                 </div>
             </div>
         </div>
-
-
-
-
-
     </main>
 
-    
+
 
     <!-- JS here -->
 
@@ -213,6 +229,19 @@
     <!-- Jquery Plugins, main Jquery -->
     <script src="./assets/js/plugins.js"></script>
     <script src="./assets/js/main.js"></script>
+
+    <!--Chat bot-->
+        <script type="text/javascript">
+            (function (d, m) {
+                var kommunicateSettings =
+                    { "appId": "71ba175ab0c95c586cfd0b89dd09d3fa", "popupWidget": true, "automaticChatOpenOnNavigation": true };
+                var s = document.createElement("script"); s.type = "text/javascript"; s.async = true;
+                s.src = "https://widget.kommunicate.io/v2/kommunicate.app";
+                var h = document.getElementsByTagName("head")[0]; h.appendChild(s);
+                window.kommunicate = m; m._globals = kommunicateSettings;
+            })(document, window.kommunicate || {});
+            /* NOTE : Use web server to view HTML files as real-time update will not work if you directly open the HTML file in the browser. */
+        </script>
 
 </body>
 
