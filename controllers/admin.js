@@ -6,24 +6,32 @@ const path = require('path');
 var AWS = require('aws-sdk');
 var easyinvoice = require('easyinvoice');
 var fs = require("fs");
-var ses = new AWS.SES({ region: 'us-east-1' });
+var cred=require("./cred");
+
 var mailcomposer = require('mailcomposer');
 var awsCloudFront = require("aws-cloudfront-sign");
 
-var connectDB = mysql.createConnection({
-    host: process.env.rds_host,
-    user: process.env.rds_user,
-    password: process.env.rds_password,
-    database: process.env.rds_database
-});
+cred.getCredentials.then(data => {
+    data = JSON.parse(JSON.parse(data))
+    connectDB = mysql.createConnection({
+        host: data.rds_host,
+        user: data.rds_user,
+        password: data.rds_password,
+        database: data.rds_database
+    });
+    s3 = new AWS.S3({
+        accessKeyId: data.accessKeyId,
+        secretAccessKey: data.secretAccessKey,
+        region: data.region,
+        apiVersion: '2006-03-01'
+    });
+    keypairId = data.CLOUDFRONT_ACCESS_KEY_ID, 
+    privateKeyPath = data.CLOUDFRONT_PRIVATE_KEY_PATH,
+    cloudfront_url = data.CLOUDFRONT_URL
+})
 
-var s3 = new AWS.S3({
-    accessKeyId: process.env.accessKeyId,
-    secretAccessKey: process.env.secretAccessKey,
-    region: process.env.region,
-    apiVersion: '2006-03-01'
 
-});
+
 
 var bucket = "aishbucket1";
 
@@ -38,6 +46,7 @@ var sts = new AWS.STS({ apiVersion: '2011-06-15' });
 
 //Assume Role
 var dynamodb = {}
+var ses = {}
 sts.assumeRole(roleToAssume, function (err, data) {
     if (err) console.log(err, err.stack);
     else {
@@ -46,7 +55,9 @@ sts.assumeRole(roleToAssume, function (err, data) {
             secretAccessKey: data.Credentials.SecretAccessKey,
             sessionToken: data.Credentials.SessionToken
         })
+        ses = new AWS.SES({ credentials: creds, region: 'us-east-1' });
         dynamodb = new AWS.DynamoDB({ apiVersion: '2012-08-10', credentials: creds, region: 'us-east-1' })
+
     }
 })
 
@@ -134,7 +145,7 @@ exports.postLogin = (req, res, next) => {
 
 //get invoices
 exports.getInvoices = (req, res, next) => {
-    var options = { keypairId: process.env.CLOUDFRONT_ACCESS_KEY_ID, privateKeyPath: process.env.CLOUDFRONT_PRIVATE_KEY_PATH };
+    var options = { keypairId:keypairId, privateKeyPath:privateKeyPath };
     return fetch('https://j0noe3sfu4.execute-api.us-east-1.amazonaws.com/dev/invoice', {
         method: 'GET',
     }).then(async response => {
@@ -143,7 +154,7 @@ exports.getInvoices = (req, res, next) => {
             let data = JSON.parse(await response.text());
             for (var i=1; i<data.Contents.length; i++){
                 urls.push({
-                    url : awsCloudFront.getSignedUrl(process.env.CLOUDFRONT_URL + "/" + data.Contents[i].Key, options),
+                    url : awsCloudFront.getSignedUrl(cloudfront_url + "/" + data.Contents[i].Key, options),
                     filename : data.Contents[i].Key
                 })
             }
@@ -160,16 +171,18 @@ exports.postChangeStatus = (req, res, next) => {
 
     if (req.body.click == "Approve") {
         value = 1;
-        // data = "UPDATE bookingstatus " +
-        //     " SET  status = " + mysql.escape(value) +
-        //     " WHERE email = " + mysql.escape(req.body.mail) +
-        //     " AND type = " + mysql.escape(req.body.type) +
-        //     " AND category = " + mysql.escape(req.body.cat) +
-        //     " AND roomWant = " + mysql.escape(req.body.want)
+        data = "UPDATE bookingstatus " +
+            " SET  status = " + mysql.escape(value) +
+            " WHERE email = " + mysql.escape(req.body.mail) +
+            " AND type = " + mysql.escape(req.body.type) +
+            " AND category = " + mysql.escape(req.body.cat) +
+            " AND roomWant = " + mysql.escape(req.body.want)
 
         //creating invoice pdf
         let today = new Date()
         let dueDate = new Date(new Date().setDate(today.getDate()+15))
+        // console.log("body"+req.body.name)
+        // console.log(req.body.address)
         var invoiceData = {
             "images": {
                 // The logo on top of your invoice
@@ -200,7 +213,7 @@ exports.postChangeStatus = (req, res, next) => {
                     "quantity": req.body.want,
                     "description": req.body.cat,
                     "tax-rate": 6,
-                    "price": 250
+                    "price": req.body.cost
                 }],
             "bottom-notice": "Kindly pay your invoice within 15 days.",
             "settings": {

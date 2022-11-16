@@ -1,17 +1,61 @@
-//module
+//modulevar 
+mysql = require('mysql2');
 var AWS = require('aws-sdk');
 const AmazonCognitoIdentity = require('amazon-cognito-identity-js');
 require('dotenv').config()
-const decodeJwt=require("jwt-decode")
+const decodeJwt = require("jwt-decode")
+var cred = require("./cred")
 
-const poolData = {
-   UserPoolId: process.env.user_pool_id, // Your user pool id here    
-   ClientId: process.env.client_id // Your client id here
+var roleToAssume = {
+   RoleArn: 'arn:aws:iam::939216532729:role/Aishwarya-dyanamodb',
+   RoleSessionName: 'session1',
+   DurationSeconds: 900,
 };
-const pool_region = 'us-east-1';
-const pool = new AmazonCognitoIdentity.CognitoUserPool(poolData)
 
-var dynodb = new AWS.DynamoDB({ apiVersion: '2012-08-10', "region": 'us-east-1', "endpoint": "http://dynamodb.us-east-1.amazonaws.com" });
+// Create the STS service object    
+var sts = new AWS.STS({ apiVersion: '2011-06-15' });
+
+//Assume Role
+var dynodb = {}
+var ses = {}
+sts.assumeRole(roleToAssume, function (err, data) {
+   if (err) console.log(err, err.stack);
+   else {
+      var creds = new AWS.Credentials({
+         accessKeyId: data.Credentials.AccessKeyId,
+         secretAccessKey: data.Credentials.SecretAccessKey,
+         sessionToken: data.Credentials.SessionToken
+      })
+      ses = new AWS.SES({ credentials: creds, region: 'us-east-1' });
+      dynodb = new AWS.DynamoDB({ apiVersion: '2012-08-10', credentials: creds, region: 'us-east-1' })
+
+   }
+})
+
+//store paramter
+cred.getCredentials.then(data => {
+   data = JSON.parse(JSON.parse(data))
+   connectDB = mysql.createConnection({
+      host: data.rds_host,
+      user: data.rds_user,
+      password: data.rds_password,
+      database: data.rds_database
+   });
+   s3 = new AWS.S3({
+      accessKeyId: data.accessKeyId,
+      secretAccessKey: data.secretAccessKey,
+      region: data.region,
+      apiVersion: '2006-03-01'
+   });
+   poolData = {
+      UserPoolId: data.user_pool_id, // Your user pool id here    
+      ClientId: data.client_id // Your client id here
+   };
+   pool = new AmazonCognitoIdentity.CognitoUserPool(poolData)
+})
+
+
+
 
 //authentication check
 exports.authentication = (req, res, next) => {
@@ -133,6 +177,139 @@ exports.postCreateAccount = (req, res, next) => {
    })
 }
 
+//get request for category
+exports.getCategory = (req, res, next) => {
+
+   res.render('user/category', { user: req.session.mail });
+}
+
+//post request of category
+exports.postCategory = (req, res, next) => {
+
+
+   data = "SELECT * " +
+      " FROM  category " +
+      " WHERE name = " + mysql.escape(req.body.cat) +
+      " AND type = " + mysql.escape(req.body.type) +
+      " AND available > 0";
+
+   connectDB.query(data, (err, result) => {
+      if (err) throw err; //show if error found
+      else {
+         // console.log(result);
+         return res.render('user/showCategory', { user: req.session.mail, rooms: result })
+      }
+   })
+
+}
+// get booking data 
+exports.postBooking = (req, res, next) => {
+   // console.log(req.body);
+
+   res.render('user/bookingConfirm.ejs', { user: req.session.mail, name: req.body.name, type: req.body.type, cost: req.body.cost });
+}
+
+//post status request
+
+exports.postStatus = (req, res, next) => {
+
+
+
+   
+  var date = req.body.date;
+   //console.log(date)
+   data = "INSERT INTO bookingstatus " +
+      " VALUES ('" + req.session.mail + "','" + req.body.name + "','" + req.body.type + "','" + req.body.roomWant + "','" + 0 + "','" + date +"','" + req.body.cost + "')"
+
+   data1 = "SELECT * " +
+      " FROM  bookingstatus " +
+      " WHERE email = " + mysql.escape(req.session.mail);
+
+   connectDB.query(data, (err, reslt) => {
+      if (err) throw err;
+      else {
+         connectDB.query(data1, (err1, result) => {
+            for (i in result) {
+               var a = result[i].date
+               a = a.toString()
+               result[i].date = a.slice(0, 15);
+            }
+            res.render('user/statusShow', { user: req.session.mail, msg: "Your booking is placed", err: "", data: result });
+         })
+      }
+   })
+}
+
+
+//get status
+exports.getShowStatus = (req, res, next) => {
+
+
+   var connectDB = mysql.createConnection({
+      host: process.env.rds_host,
+      user: process.env.rds_user,
+      password: process.env.rds_password,
+      database: process.env.rds_database
+   });
+
+
+   data = "SELECT * " +
+      " FROM  bookingstatus " +
+      " WHERE email = " + mysql.escape(req.session.mail);
+
+   connectDB.query(data, (err, result) => {
+
+      if (err) throw err;
+      else {
+         for (i in result) {
+            var a = result[i].date
+            a = a.toString()
+            result[i].date = a.slice(0, 15);
+         }
+         if (result.length < 1) {
+            res.render('user/statusShow', { user: req.session.mail, msg: "", err: "oops!! You dont have any booking.", data: result });
+         }
+         else {
+            res.render('user/statusShow', { user: req.session.mail, msg: "", err: "", data: result });
+         }
+      }
+   })
+}
+
+
+//delete booking request
+exports.deleteBooking = (req, res, next) => {
+
+
+
+
+
+   data = "DELETE FROM bookingstatus " +
+      " WHERE email = " + mysql.escape(req.body.mail) +
+      " AND type = " + mysql.escape(req.body.type) +
+      " AND category = " + mysql.escape(req.body.cat) +
+      " AND roomWant = " + mysql.escape(req.body.want)
+
+   connectDB.query(data, (err, result) => {
+      if (err) throw err;
+      else {
+         next();
+      }
+   })
+
+}
+
+
+//show contact page
+exports.getContact = (req, res, next) => {
+   if (req.session.mail == undefined) {
+      res.render('user/contact', { user: "" });
+   }
+   else {
+      res.render('user/contact', { user: req.session.mail });
+   }
+
+}
 //logout
 exports.logout = (req, res, next) => {
    req.session.destroy();
