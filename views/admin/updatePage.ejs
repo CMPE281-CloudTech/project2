@@ -2,20 +2,20 @@
   <div class="content-wrapper">
     <div class="container-fluid">
       <div class="row">
-        <div class="col-lg-4 text-center middleposition">
+        <div class= "col-lg-4 text-center middleposition"> 
           <form action="/admin/updateData" method="POST">
-            <p>Category</p>
+            <p>CATEGORY</p>
             <input type="text" class="form-control" name="cat" value="<%=data.name%>" readonly>
-            <p>Room Type</p>
+            <p>ROOM TYPE</p>
             <input type="text" class="form-control" name="type" value="<%=data.type%>">
-            <p>Per Night Cost</p>
+            <p>PER NIGHT COST</p>
             <input type="number" class="form-control" name="cost" value="<%=data.cost%>">
-            <p>Room Available</p>
+            <p>ROOM AVAILABLE</p>
             <input type="number" class="form-control" name="avlvl" value="<%=data.available%>">
-            <p>Add Some Description</p>
+            <p>ADD DESCRIPTION</p>
             <input type="text" class="form-control" name="des" value="<%=data.dec%>">
 
-            <input type="submit" class="btn btn-lg btn-success mt-3" value="Update">
+            <input type="submit" class="btn btn-secondary" value="Update">
           </form>
         </div>
       </div>

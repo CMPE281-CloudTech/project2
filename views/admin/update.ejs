@@ -9,23 +9,24 @@
             <div class="table-responsive">
               <table class="table table-bordered text-center" id="dataTable" width="100%" cellspacing="0">
                 <% if(data.length) { %>
-                  <thead class="bg-primary text-white">
+                  <thead class="p-3 mb-2 bg-secondary text-white">
+                  <!-- "bg-primary text-white"> -->
                     <tr>
-                      <th>No.</th>
-                      <th>Category</th>
-                      <th>Room Type</th>
-                      <th>Cost</th>
-                      <th>Room Available</th>
-                      <th>Update</th>
+                      <!-- <th>No.</th> -->
+                      <th>CATEGORY</th>
+                      <th>ROOM TYPE</th>
+                      <th>PER NIGHT COST</th>
+                      <th>ROOMS AVAILABLE</th>
+                      <th>UPDATE</th>
                     </tr>
                   </thead>
 
                   <tbody>
                     <% for (i in data) { %>
                       <tr>
-                        <th>
+                        <!-- <th>
                           <%=i%>
-                        </th>
+                        </th> -->
                         <th>
                           <%=data[i].name%>
                         </th>
@@ -44,7 +45,7 @@
                             <input type="hidden" name="type" value="<%=data[i].type%>">
                             <input type="hidden" name="cost" value="<%=data[i].cost%>">
                             <input type="hidden" name="available" value="<%=data[i].available%>">
-                            <input type="submit" class="btn btn-info btn-ml" name="click" value="Update">
+                            <input type="submit" class="btn btn-secondary" name="click" value="Update">
 
                           </form>
                         </th>
@@ -53,7 +54,7 @@
                   </tbody>
               </table>
               <% } else { %>
-                <h3 style="color: #ff304f;" class="text-center">No Data Found</h3><br>
+                <h3 style="color: #a4626c;" class="text-center">Opps!! No Data Found</h3><br>
                 <% } %>
             </div>
           </div>

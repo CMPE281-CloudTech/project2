@@ -4,39 +4,39 @@
       <div class="row">
         <div class="col-lg-4 text-center middleposition">
           <% if(msg) { %>
-            <h3 style="color: #17b978;" class="text-center">
+            <h3 style="color: #05834e;" class="text-center">
               <%=msg%>
             </h3><br>
             <% } %>
               <% if(err) { %>
-                <h3 style="color: #ff304f;" class="text-center">
+                <h3 style="color: #ae2d3e;" class="text-center">
                   <%=err%>
                 </h3><br>
                 <% } %>
                   <form action="/admin/addhotel" method="POST" enctype="multipart/form-data">
-                    <p>Category</p>
+                    <p>CATEGORY</p>
                     <select name="cat" class="form-control">
                       <option value="Business Class">Business Class</option>
                       <option value="First class">First class</option>
                       <option value="Second class">Second class</option>
                     </select>
                     <!-- <input type="text" class="form-control" name="cat" placeholder="Category name"> -->
-                    <p>Room Type</p>
+                    <p>ROOM TYPE</p>
                     <select name="type" class="form-control">
                       <option value="Single Bed">Single Bed</option>
                       <option value="Double Bed">Double Bed</option>
                     </select>
                     <!-- <input type="text" class="form-control" name="type" placeholder="Room Type"> -->
-                    <p>Per Night Cost</p>
+                    <p>PER NIGHT COST</p>
                     <input type="number" class="form-control" name="cost" placeholder="Per Night Cost">
-                    <p>Room Available</p>
+                    <p>ROOM AVAILABLE</p>
                     <input type="number" class="form-control" name="avlvl" placeholder="Room Available">
-                    <p>Add Some Description</p>
+                    <p>ADD DESCRIPTION</p>
                     <input type="text" class="form-control" name="des" placeholder="Add Some Description">
-                    <p>Add Image</p>
+                    <p>ADD IMAGE</p>
                     <input type="file" class="form-control" name="img" placeholder="Add Image">
 
-                    <input type="submit" class="btn btn-lg btn-success mt-3" value="Add">
+                    <input type="submit" class="btn btn-secondary" value="Add">
                   </form>
         </div>
       </div>

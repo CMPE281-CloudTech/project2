@@ -10,9 +10,9 @@
               <table class="table table-bordered text-center" id="dataTable" width="100%" cellspacing="0">
                 <% if(data.length) { %>
 
-                  <thead class="bg-primary text-white">
+                  <thead class="bg-dark text-white">
                     <tr>
-                      <th>SL No.</th>
+                      <!-- <th>SL No.</th> -->
                       <th>Email</th>
                       <th>Category</th>
                       <th>Type</th>
@@ -25,9 +25,9 @@
                   <tbody>
                     <% for (i in data) { %>
                       <tr>
-                        <th>
+                        <!-- <th>
                           <%=i%>
-                        </th>
+                        </th> -->
                         <th><a data-toggle="modal" href="#" data-target="#runModal<%=i%>">
                             <%=data[i].email%>
                           </a></th>
@@ -90,8 +90,8 @@
               </table>
               <% } else { %>
 
-                <h3 style="color: #ff304f;" class="text-center">No Data Found</h3>
-                <thead class="bg-primary text-white">
+                <h5 style="color: #ad061fe1;" class="text-center">No Bookings Found!!</h5>
+                <thead class="bg-dark text-white">
                   <tr>
                     <th>SL No.</th>
                     <th>Email</th>

@@ -139,6 +139,7 @@
                                                     <th>Date</th>
                                                     <th>Category</th>
                                                     <th>Type</th>
+                                                    <th>Total Cost</th>
                                                     <th>Status</th>
                                                 </tr>
                                             </thead>
@@ -158,12 +159,15 @@
                                                         <td>
                                                             <%=data[i].type%>
                                                         </td>
+                                                       <td>
+                                                            <%=data[i].roomWant * data[i].cost%>
+                                                        </td>
 
                                                         <% if(data[i].status==1){ %>
                                                             <td style="color: #17b978;" class="text-center">Approved
                                                             </td>
                                                             <% } else if(data[i].status==0){ %>
-                                                                <td style="color: #f0da16;" class="text-center">Pending
+                                                                <td style="color: #be210c;" class="text-center">Pending
                                                                     <form action="/deletereq" method="POST">
                                                                         <input type="text" name="mail"
                                                                             value="<%=data[i].email%>" hidden>
@@ -173,9 +177,11 @@
                                                                             value="<%=data[i].category%>" hidden>
                                                                         <input type="text" name="type"
                                                                             value="<%=data[i].type%>" hidden>
+                                                                        <!-- <input type="text" name="type"
+                                                                            value="<%=data[i].roomWant%>" hidden> -->
                                                                         <input type="submit" value="Delete"
-                                                                            style="background-color: #ff304f;"
-                                                                            class="text-center btn btn-danger buttonDelete">
+                                                                            style="background-color: #490f08;"
+                                                                            class="btn btn-info">
                                                                 </td>
                                                                 </form>
                                                                 <% } %>
