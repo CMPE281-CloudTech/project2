@@ -1,6 +1,6 @@
 # Full Stack 3 Tier web application integrated with multiple AWS functionality.
 Cloud project 2-The Main learning of this project was to integrate full stack projects with AWS
-# Key learned-
+## Key learned-
 AWS EC2
 Cloudfront to download invoices
 CI/CD deployment using code pipelines 
@@ -9,11 +9,11 @@ Storage in S3
 Databases explored-AWS Dynamo db and AWS RDS.
 Hosted using Route53.
 Chatbot Integration .
-# WEB TECHNOLOGIES:
- NodeJS /n
- EJS /n
- React /n
- Databases- AWS Dynamo DB, RDS /n
+## WEB TECHNOLOGIES:
+ NodeJS 
+ EJS 
+ React 
+ Databases- AWS Dynamo DB, RDS 
  
  
  
